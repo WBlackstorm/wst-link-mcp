@@ -1,6 +1,6 @@
 module github.com/weverton/wst-link-mcp
 
-go 1.25.6
+go 1.25.5
 
 require github.com/mark3labs/mcp-go v0.57.0
 

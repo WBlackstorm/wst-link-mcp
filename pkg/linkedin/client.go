@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -29,9 +30,13 @@ type Client struct {
 
 // NewClient instantiates a new LinkedIn API client with the provided OAuth access token.
 func NewClient(accessToken string) *Client {
+	baseURL := os.Getenv("LINKEDIN_BASE_URL")
+	if baseURL == "" {
+		baseURL = defaultBaseURL
+	}
 	return &Client{
 		accessToken: accessToken,
-		baseURL:     defaultBaseURL,
+		baseURL:     baseURL,
 		httpClient: &http.Client{
 			Timeout: 15 * time.Second,
 		},
