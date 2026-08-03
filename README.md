@@ -15,140 +15,68 @@ Unlike Node.js or Python implementations, `linkmcp` compiles down to a single st
 - 🐳 **Docker Support:** Ready-to-use Dockerfile with multi-stage scratch image (~12MB total container size).
 - 🔐 **Official LinkedIn API Integration:** Safe and compliant with LinkedIn Developer Policies.
 - 🛠️ **MCP Native:** Exposes Tools and Resources for seamless integration with Claude Desktop & Cursor.
-- 💬 **Text Posts Publishing:** Allow your LLM agent to generate and post text directly to your feed.
-
----
-
-## 🛠️ Installation
-
-### Option 1: Docker Image (Recommended)
-
-Build the Docker image locally:
-
-```bash
-docker build -t wst-link-mcp:latest .
-```
-
-### Option 2: Quick Install (Binary)
-
-Download the latest binary for your operating system from the [Releases](https://github.com/wblackstorm/wst-link-mcp/releases) page.
-
-### Option 3: Build from Source
-
-Requirements: **Go 1.22+**
-
-```bash
-# Clone the repository
-git clone https://github.com/wblackstorm/wst-link-mcp.git
-cd wst-link-mcp
-
-# Build the binary
-go build -o linkmcp cmd/linkmcp/main.go
-```
-
-### Makefile Commands
-
-For convenience, a `Makefile` is provided with common workflow commands:
-
-```bash
-make help          # Show all available make targets
-make build         # Build binary to bin/linkmcp
-make run           # Run server locally (uses .env if present)
-make stop          # Stop running processes or containers
-make clean         # Remove build artifacts
-make test          # Run unit tests
-make docker-build   # Build Docker image (wst-link-mcp:latest)
-make docker-run    # Run Docker container with .env file
-make docker-stop   # Stop running Docker container
-```
-
----
-
-## ⚙️ Configuration
-
-### 1. Get a LinkedIn Access Token
-
-To use `linkmcp`, you need a LinkedIn Access Token with `w_member_social` and `openid` scopes:
-
-1. Go to the [LinkedIn Developer Portal](https://www.linkedin.com/developers/).
-2. Create an App and enable **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect**.
-3. Generate a Member Access Token in the **OAuth 2.0 Tools** section.
-
-### 2. Environment Variables & `.env.example`
-
-Copy `.env.example` to `.env` or set the environment variables in your MCP client configuration:
-
-```env
-# LinkedIn OAuth 2.0 Access Token (Required - with w_member_social and openid scopes)
-LINKEDIN_ACCESS_TOKEN=your_linkedin_access_token_here
-
-# LinkedIn API Base Host URL (Optional - default: https://api.linkedin.com)
-LINKEDIN_BASE_URL=https://api.linkedin.com
-```
-
-| Environment Variable | Required | Default Value | Description |
-| --- | --- | --- | --- |
-| `LINKEDIN_ACCESS_TOKEN` | **Yes** | *None* | LinkedIn OAuth 2.0 member access token. |
-| `LINKEDIN_BASE_URL` | **No** | `https://api.linkedin.com` | Base URL for LinkedIn API calls. |
-
----
-
-## 🔌 Integration with Claude Desktop
-
-Add `linkmcp` to your `claude_desktop_config.json`:
-
-- **MacOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-### Option A: Using Docker (Containerized)
-
-```json
-{
-  "mcpServers": {
-    "linkedin": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "LINKEDIN_ACCESS_TOKEN=seu_access_token_aqui",
-        "wst-link-mcp:latest"
-      ]
-    }
-  }
-}
-```
-
-> **Note:** The `-i` (interactive) flag is required for Stdio communication between Claude Desktop and Docker. Do not use `-t` (tty).
-
-### Option B: Using Binary
-
-```json
-{
-  "mcpServers": {
-    "linkedin": {
-      "command": "/caminho/para/seu/linkmcp",
-      "env": {
-        "LINKEDIN_ACCESS_TOKEN": "seu_access_token_aqui"
-      }
-    }
-  }
-}
-```
+- 💬 **Text & Media Posts Publishing:** Publish text posts or posts with image/carousel media attachments.
+- 📊 **Post Analytics:** Fetch impression, reaction, and comment metrics for your LinkedIn posts.
+- 🌐 **Dual Transport Mode:** Supports both standard `stdio` mode and `sse` (Server-Sent Events) mode for remote hosting.
+- 🔑 **Automated Token Refresher:** CLI utility to automatically exchange and refresh OAuth 2.0 access tokens.
 
 ---
 
 ## 🧰 Available MCP Tools
 
 ### `publish_linkedin_post`
-Publishes a text post to your LinkedIn profile.
+Publishes a text or media post to your LinkedIn profile.
 
 **Parameters:**
 - `commentary` (string, required): The text content of your post.
+- `media_urn` (string, optional): LinkedIn digital media asset URN (e.g. `urn:li:digitalmediaAsset:...`).
+- `media_title` (string, optional): Title for the attached media.
+
+### `upload_linkedin_media`
+Uploads a local image or PDF/document file to LinkedIn and returns the registered media asset URN.
+
+**Parameters:**
+- `file_path` (string, required): Local file path of the image or document to upload.
+- `recipe` (string, optional): Media recipe type (`urn:li:digitalmediaRecipe:feedshare-image` or `urn:li:digitalmediaRecipe:feedshare-document`).
 
 ### `get_linkedin_profile`
 Fetches the current authenticated user's LinkedIn profile URN and basic information.
+
+### `get_linkedin_post_analytics`
+Retrieves engagement metrics (likes, comments, etc.) for a specific LinkedIn post.
+
+**Parameters:**
+- `post_urn` (string, required): The URN or ID of the post.
+
+---
+
+## 🚀 Modes of Operation
+
+### Stdio Mode (Default)
+Used by Claude Desktop & Cursor via stdin/stdout:
+```bash
+./bin/linkmcp
+```
+
+### SSE (Server-Sent Events) Mode
+Suitable for web services and cloud deployments:
+```bash
+# Via flags
+./bin/linkmcp -mode sse -port 8080
+
+# Or via environment variables
+MCP_MODE=sse PORT=8080 ./bin/linkmcp
+```
+
+---
+
+## 🔑 Token Refresher CLI
+
+Build and run the `token-refresher` tool to exchange OAuth authorization codes or refresh existing tokens:
+
+```bash
+./bin/token-refresher --client-id=YOUR_CLIENT_ID --client-secret=YOUR_CLIENT_SECRET --code=AUTH_CODE --redirect-uri=http://localhost:8080/callback
+```
 
 ---
 
@@ -156,10 +84,10 @@ Fetches the current authenticated user's LinkedIn profile URN and basic informat
 
 - [x] Basic Text Post Publishing (`/rest/posts`)
 - [x] Docker Container Support
-- [ ] Image and PDF/Carousel Upload Support
-- [ ] Post Analytics Tool (impressions, likes, comments)
-- [ ] SSE (Server-Sent Events) Mode for Cloud Hosting
-- [ ] Automated Token Refresher CLI
+- [x] Image and PDF/Carousel Upload Support
+- [x] Post Analytics Tool (impressions, likes, comments)
+- [x] SSE (Server-Sent Events) Mode for Cloud Hosting
+- [x] Automated Token Refresher CLI
 
 ---
 

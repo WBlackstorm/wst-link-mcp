@@ -27,9 +27,11 @@ help:
 
 ## build: Build the Go binary
 build:
-	@echo "Building Go binary..."
+	@echo "Building Go binaries..."
 	@mkdir -p $(BUILD_DIR)
 	$(GO) build -ldflags="-w -s" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/linkmcp/main.go
+	$(GO) build -ldflags="-w -s" -o $(BUILD_DIR)/token-refresher ./cmd/token-refresher/main.go
+
 
 ## run: Run the application locally
 run: build

@@ -21,3 +21,17 @@ func TestNewServerSuccess(t *testing.T) {
 		t.Fatal("expected non-nil server instance")
 	}
 }
+
+func TestNewSSEServer(t *testing.T) {
+	s, err := NewServer("test-access-token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	sse := NewSSEServer(s)
+	if sse == nil {
+		t.Fatal("expected non-nil SSEServer instance")
+	}
+}
+
+
