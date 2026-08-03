@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
 
 const (
 	defaultBaseURL = "https://api.linkedin.com"
-	apiVersion     = "202401"
+	apiVersion     = "202606"
 	restliVersion  = "2.0.0"
 )
 
@@ -482,18 +484,23 @@ func (c *Client) GetPostAnalytics(ctx context.Context, postURN string) (*PostAna
 
 // ExchangeOAuthToken exchanges an authorization code or refresh token for a LinkedIn access token.
 func (c *Client) ExchangeOAuthToken(ctx context.Context, clientID, clientSecret, code, redirectURI, refreshToken string) (*TokenResponse, error) {
-	url := fmt.Sprintf("%s/oauth/v2/accessToken", c.baseURL)
+	u := fmt.Sprintf("%s/oauth/v2/accessToken", c.baseURL)
 
-	var reqBody string
+	data := url.Values{}
 	if refreshToken != "" {
-		reqBody = fmt.Sprintf("grant_type=refresh_token&refresh_token=%s&client_id=%s&client_secret=%s",
-			refreshToken, clientID, clientSecret)
+		data.Set("grant_type", "refresh_token")
+		data.Set("refresh_token", refreshToken)
+		data.Set("client_id", clientID)
+		data.Set("client_secret", clientSecret)
 	} else {
-		reqBody = fmt.Sprintf("grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s",
-			code, redirectURI, clientID, clientSecret)
+		data.Set("grant_type", "authorization_code")
+		data.Set("code", code)
+		data.Set("redirect_uri", redirectURI)
+		data.Set("client_id", clientID)
+		data.Set("client_secret", clientSecret)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBufferString(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token exchange request: %w", err)
 	}

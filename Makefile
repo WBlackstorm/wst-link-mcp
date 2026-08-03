@@ -17,7 +17,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  build         Build the Go binary into bin/linkmcp"
-	@echo "  run           Run the application locally (requires LINKEDIN_ACCESS_TOKEN)"
+	@echo "  run           Run the application locally (requires LINKEDIN_CLIENT_ID & LINKEDIN_CLIENT_SECRET)"
 	@echo "  stop          Stop any running linkmcp local processes or Docker container"
 	@echo "  clean         Clean build directory and test artifacts"
 	@echo "  test          Run all unit tests"
@@ -37,9 +37,10 @@ build:
 run: build
 	@echo "Starting linkmcp..."
 	@if [ -f .env ]; then \
-		set -a; source .env; set +a; \
+		set -a; . ./.env; set +a; \
 	fi; \
 	./$(BUILD_DIR)/$(BINARY_NAME)
+
 
 ## stop: Stop running process or container
 stop: docker-stop
@@ -67,7 +68,7 @@ docker-run:
 	@if [ -f .env ]; then \
 		docker run -i --rm --name $(CONTAINER_NAME) --env-file .env $(DOCKER_IMAGE); \
 	else \
-		docker run -i --rm --name $(CONTAINER_NAME) -e LINKEDIN_ACCESS_TOKEN=$${LINKEDIN_ACCESS_TOKEN} $(DOCKER_IMAGE); \
+		docker run -i --rm --name $(CONTAINER_NAME) -e LINKEDIN_CLIENT_ID=$${LINKEDIN_CLIENT_ID} -e LINKEDIN_CLIENT_SECRET=$${LINKEDIN_CLIENT_SECRET} -e LINKEDIN_REDIRECT_URI=$${LINKEDIN_REDIRECT_URI} $(DOCKER_IMAGE); \
 	fi
 
 ## docker-stop: Stop Docker container

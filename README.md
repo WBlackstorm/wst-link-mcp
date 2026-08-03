@@ -58,15 +58,67 @@ Used by Claude Desktop & Cursor via stdin/stdout:
 ./bin/linkmcp
 ```
 
+### Configuration & Automatic Authentication
+You can configure credentials via command-line flags or environment variables:
+
+- `--client-id` / `LINKEDIN_CLIENT_ID`: LinkedIn App Client ID
+- `--client-secret` / `LINKEDIN_CLIENT_SECRET`: LinkedIn App Client Secret
+- `--redirect-uri` / `LINKEDIN_REDIRECT_URI`: OAuth Redirect URI (default: `http://localhost:8080/callback`)
+- `--refresh-token` / `LINKEDIN_REFRESH_TOKEN`: Existing Refresh Token (optional)
+
+> ⚡ **Automatic Browser Authentication:** `linkmcp` will automatically use your `client_id` & `client_secret` to:
+> 1. Exchange a `LINKEDIN_REFRESH_TOKEN` for a new access token (if available).
+> 2. Or automatically open your default browser to authorize with LinkedIn and capture the callback code locally via HTTP.
+
 ### SSE (Server-Sent Events) Mode
 Suitable for web services and cloud deployments:
 ```bash
 # Via flags
-./bin/linkmcp -mode sse -port 8080
+./bin/linkmcp -mode sse -port 8080 -client-id YOUR_CLIENT_ID -client-secret YOUR_CLIENT_SECRET -redirect-uri http://localhost:8080/callback
 
 # Or via environment variables
-MCP_MODE=sse PORT=8080 ./bin/linkmcp
+MCP_MODE=sse PORT=8080 LINKEDIN_CLIENT_ID=YOUR_CLIENT_ID LINKEDIN_CLIENT_SECRET=YOUR_CLIENT_SECRET ./bin/linkmcp
 ```
+
+---
+
+## ⚙️ MCP Server Configuration (`mcp_config.json`)
+
+To register `wst-link-mcp` with **Antigravity**, **Claude Desktop**, or **Cursor**, add the following configuration to your `mcp_config.json` (e.g. `~/.gemini/config/mcp_config.json` or `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "wst-link-mcp": {
+      "command": "/path/to/wst-link-mcp/bin/linkmcp",
+      "args": [
+        "-client-id", "YOUR_CLIENT_ID",
+        "-client-secret", "YOUR_CLIENT_SECRET",
+        "-redirect-uri", "http://localhost:8080/callback"
+      ]
+    }
+  }
+}
+```
+
+Or using environment variables directly:
+
+```json
+{
+  "mcpServers": {
+    "wst-link-mcp": {
+      "command": "/path/to/wst-link-mcp/bin/linkmcp",
+      "env": {
+        "LINKEDIN_CLIENT_ID": "YOUR_CLIENT_ID",
+        "LINKEDIN_CLIENT_SECRET": "YOUR_CLIENT_SECRET",
+        "LINKEDIN_REDIRECT_URI": "http://localhost:8080/callback",
+        "LINKEDIN_REFRESH_TOKEN": "YOUR_OPTIONAL_REFRESH_TOKEN"
+      }
+    }
+  }
+}
+```
+
 
 ---
 
